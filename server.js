@@ -3,6 +3,7 @@ const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const app = express()
 const db = require('./utils/database')
+const ErrorMiddleware = require('./middleware/error')
 
 require('dotenv').config()
 
@@ -17,6 +18,8 @@ app.get('/', cors(), function (req, res, next) {
 app.all("*", (req,res) => {
     res.status(500).send('invalid request')
 })
+
+app.use(ErrorMiddleware)
 
 app.listen(process.env.PORT, () => {
     console.log(`server connect on ${process.env.PORT}`);
