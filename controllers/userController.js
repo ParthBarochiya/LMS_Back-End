@@ -17,7 +17,7 @@ const registrationUser = async (req, res) => {
             throw new ErrorHandler("invalid datas", 400)
         }
 
-        const isEmailExist = await userModel.findOne({email});
+        const isEmailExist = await userModel.findOne({ email });
 
         if (isEmailExist) throw new ErrorHandler("user already exist", 400)
 
@@ -28,11 +28,11 @@ const registrationUser = async (req, res) => {
         }
 
         const activationToken = await createActivationToken(user)
-   
+
         const activationCode = activationToken.activationCode;
 
-        const data ={
-            user : {
+        const data = {
+            user: {
                 activationCode
             }
         }
@@ -42,22 +42,22 @@ const registrationUser = async (req, res) => {
         try {
             await sendMail({
                 email: user.email,
-                subject : "for OTP",
-                template : "activation-mail.ejs",
+                subject: "for OTP",
+                template: "activation-mail.ejs",
                 data
             })
 
             res.status(201).json({
-                success : true,
-                message : "plase check you mail",
-                activationToken : activationToken.token
+                success: true,
+                message: "plase check you mail",
+                activationToken: activationToken.token
             })
-        }catch(err){
+        } catch (err) {
             throw new ErrorHandler(err.message, 400)
         }
 
-        
-   
+
+
     } catch (error) {
         throw new ErrorHandler(error.message, 400)
     }
@@ -79,7 +79,52 @@ const createActivationToken = (user) => {
     return { token, activationCode };
 }
 
+
+
+// activate user
+const activateUser = async (req, res, next) => {
+    try {
+        const {activation_token, activationCode} = req.body
+
+        console.log(activationCode, activation_token);
+
+        const newuser = jwt.verify(
+            activation_token,
+            process.env.JWT_ACTIVATION_CODE
+        )
+
+        console.log(newuser);
+
+        if(newuser.activationCode != activationCode){
+            throw new ErrorHandler('invalid activation code', 400)
+        }
+
+        const {name,email,password} = newuser.user;
+
+        const existsUser = await userModel.findOne({email});
+
+        if(existsUser){
+            throw new ErrorHandler('Email Already Exists', 400)
+        }
+
+        const user = await userModel.create({
+            name,
+            email,
+            password
+        })
+
+        res.status(201).json({
+            success : true,
+        })
+
+    } catch (err) {
+        throw new ErrorHandler(err.message, 400)
+    }
+}
+
+
 module.exports = {
     createActivationToken,
-    registrationUser
+    registrationUser,
+    activateUser
 }
