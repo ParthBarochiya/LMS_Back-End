@@ -44,8 +44,7 @@ const userSchema = mongoose.Schema({
 },{timestamps:true});
 
 
-// for hash password
-userSchema.pre('save', async(next) => {
+userSchema.pre('save',async function(next) {
     if(!this.isModified('password')){
         next();
     }
