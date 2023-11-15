@@ -123,6 +123,32 @@ const activateUser = async (req, res, next) => {
 }
 
 
+const loginUser = async (req,res,next) => {
+    try{
+        const { email,password} = req.body
+
+        if(!email || !password){
+            throw new ErrorHandler("Invalid data", 400);
+        }
+
+        const user = await userModel.findOne({email}).select('password')
+
+        if(!user){
+            throw new ErrorHandler("invalid user", 400)
+        }
+
+        const isPasswordMatch = await user.comparePassword(password);
+
+        if(!isPasswordMatch){
+            throw new ErrorHandler("Invalid email or password", 400)
+        }
+    }
+    catch(err){
+        throw new ErrorHandler(err.message,400)
+    }
+}
+
+
 module.exports = {
     createActivationToken,
     registrationUser,
